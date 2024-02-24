@@ -5,7 +5,7 @@ class SphereWithRods {
   camera: THREE.PerspectiveCamera;
   renderer: THREE.WebGLRenderer;
   rods: THREE.Mesh[] = [];
-  rodMaterial: THREE.MeshBasicMaterial;
+  rodMaterial: THREE.Material;
   sparklineCanvas: HTMLCanvasElement;
   sparklineContext: CanvasRenderingContext2D;
   startTime: number;
@@ -21,16 +21,13 @@ class SphereWithRods {
     this.scene.background = new THREE.Color(0x0a0a0a); // Dark grey
 
     this.camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 100);
-    this.renderer = new THREE.WebGLRenderer({ alpha: true });
+    this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(this.renderer.domElement);
     this.camera.position.set(5, 5, 5);
     this.camera.lookAt(this.scene.position);
 
     this.rodMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5 });
-
-    const ambientLight = new THREE.AmbientLight(0x404040);
-    this.scene.add(ambientLight);
 
     this.startPlacingRods();
     this.animate();
@@ -54,7 +51,7 @@ class SphereWithRods {
     this.sparklineContext.beginPath();
     for (let x = 0; x <= this.sparklineCanvas.width; x++) {
       const t = x / this.sparklineCanvas.width;
-      const y = this.calculateFrequency(t) * this.sparklineCanvas.height;
+      const y = this.calculateFrequency(t) * this.sparklineCanvas.height * 0.8 + (0.1 * this.sparklineCanvas.height);
       this.sparklineContext.lineTo(x, this.sparklineCanvas.height - y);
     }
     this.sparklineContext.stroke();
@@ -64,6 +61,7 @@ class SphereWithRods {
     this.sparklineContext.moveTo(lineX, 0);
     this.sparklineContext.lineTo(lineX, this.sparklineCanvas.height);
     this.sparklineContext.strokeStyle = 'white';
+    this.sparklineContext.lineWidth = 2;
     this.sparklineContext.stroke();
 
     requestAnimationFrame(this.drawSparkline.bind(this));
@@ -158,7 +156,7 @@ class SphereWithRods {
   animate = (): void => {
     requestAnimationFrame(this.animate);
 
-    const orbitSpeed = 0.0005;
+    const orbitSpeed = 0.00025;
     const time = Date.now() * orbitSpeed;
 
     this.camera.position.x = 5 * Math.sin(time);
