@@ -15,25 +15,26 @@
     <!-- https://github.com/isaacbowen/ -->
 
     <style>
-      body {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        margin: 0;
-        background-color: #f0f0f0;
-        font-family: Arial, sans-serif;
+      #threejs-canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
       }
 
-      #simulationCanvas {
-        border: 2px solid #333;
-        background-color: #fff;
-        display: flex;
+      #sparkline-canvas {
+        position: absolute;
+        right: 20px;
+        bottom: 20px;
+        width: 300px;
+        height: 100px;
       }
     </style>
   </head>
   <body>
-    <div id="simulationCanvas"></div>
+    <canvas id="threejs-canvas"></canvas>
+    <!-- Your existing 3D canvas -->
+    <canvas id="sparkline-canvas"></canvas>
+    <!-- New canvas for the sparkline -->
     <script src="bundle.js"></script>
   </body>
 </html>

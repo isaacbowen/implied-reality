@@ -6,15 +6,20 @@ class SphereWithRods {
   renderer: THREE.WebGLRenderer;
   rods: THREE.Mesh[] = [];
   rodMaterial: THREE.MeshBasicMaterial;
-  rodCount: number = 0;
-  targetRodCount: number = 100; // Example target count, adjust as needed
+  sparklineCanvas: HTMLCanvasElement;
+  sparklineContext: CanvasRenderingContext2D;
+  startTime: number;
+
   minInterval: number = 100; // Minimum interval time in ms
   maxInterval: number = 1000; // Maximum interval time in ms
 
   constructor() {
-    this.scene = new THREE.Scene();
+    this.constructSphere();
+    this.constructSparkline();
+  }
 
-    // Set the background color to a darker shade
+  constructSphere(): void {
+    this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x0a0a0a); // Dark grey
 
     this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -24,44 +29,78 @@ class SphereWithRods {
     this.camera.position.set(5, 5, 5);
     this.camera.lookAt(this.scene.position);
 
-    // Rod material with semi-transparency
     this.rodMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5 });
 
-    // Setup lighting
     const ambientLight = new THREE.AmbientLight(0x404040);
     this.scene.add(ambientLight);
 
-    // Start the rod placement and camera animation
     this.startPlacingRods();
     this.animate();
   }
 
+  constructSparkline(): void {
+    this.sparklineCanvas = document.getElementById('sparkline-canvas') as HTMLCanvasElement;
+    this.sparklineContext = this.sparklineCanvas.getContext('2d')!;
+    this.startTime = Date.now();
+    this.drawSparkline();
+  }
+
+  drawSparkline(): void {
+    const currentTime = Date.now();
+    const elapsedTime = (currentTime - this.startTime) / 1000; // in seconds
+    const totalDuration = 60; // simulation duration in seconds
+    const progress = elapsedTime / totalDuration;
+
+    this.sparklineContext.clearRect(0, 0, this.sparklineCanvas.width, this.sparklineCanvas.height);
+
+    this.sparklineContext.beginPath();
+    for (let x = 0; x <= this.sparklineCanvas.width; x++) {
+      const t = x / this.sparklineCanvas.width;
+      const y = this.calculateFrequency(t) * this.sparklineCanvas.height;
+      this.sparklineContext.lineTo(x, this.sparklineCanvas.height - y);
+    }
+    this.sparklineContext.stroke();
+
+    const lineX = progress * this.sparklineCanvas.width;
+    this.sparklineContext.beginPath();
+    this.sparklineContext.moveTo(lineX, 0);
+    this.sparklineContext.lineTo(lineX, this.sparklineCanvas.height);
+    this.sparklineContext.strokeStyle = 'white';
+    this.sparklineContext.stroke();
+
+    requestAnimationFrame(this.drawSparkline.bind(this));
+  }
+
+  calculateFrequency(t: number): number {
+    // Sine function adjusted for [0, 1] range, peaking in the middle
+    const sineWave = Math.sin(Math.PI * t);
+
+    // Raise the sine wave to a power to make the curve more dramatic
+    const power = 20; // Adjust this power to make the curve more or less dramatic
+    const dramaticSineWave = Math.pow(sineWave, power);
+
+    return dramaticSineWave;
+  }
+
   placeRod(): void {
-    // Define the base and maximum length of the rods
-    const baseLength = 1;  // Assuming R = 1 for simplicity
+    const baseLength = 1;  // Assuming R = 1
     const maxLength = 4;  // 4R
 
-    // Generate a random length with 2R being the most likely
-    const randomFactor = Math.pow(Math.random(), 2);  // Squaring the random number to skew towards lower values
-    const lengthVariance = (maxLength - baseLength) * randomFactor;
-    const rodLength = baseLength + lengthVariance;
+    const randomFactor = Math.random();  // Direct random factor for simplicity
+    const rodLength = baseLength + (maxLength - baseLength) * randomFactor;
 
     const rodGeometry = new THREE.CylinderGeometry(0.01, 0.01, rodLength, 32);
     const rod = new THREE.Mesh(rodGeometry, this.rodMaterial);
 
-    // Random spherical coordinates
     const phi = Math.random() * 2 * Math.PI; // Azimuthal angle
     const theta = Math.random() * Math.PI; // Polar angle
-    const jitter = 0.9 + Math.random() * 0.2; // Jitter for radius (0.9 to 1.1)
+    const jitter = 0.9 + Math.random() * 0.2; // Jitter for radius
 
-    // Convert spherical to Cartesian coordinates
     const x = jitter * Math.sin(theta) * Math.cos(phi);
     const y = jitter * Math.sin(theta) * Math.sin(phi);
     const z = jitter * Math.cos(theta);
 
     rod.position.set(x, y, z);
-
-    // Orient rod tangent to sphere
     rod.lookAt(this.scene.position);
 
     this.scene.add(rod);
@@ -69,18 +108,16 @@ class SphereWithRods {
   }
 
   startPlacingRods(): void {
-    const targetRodCount = 1000;  // Example target rod count
-    const minDelay = 10;  // Minimum delay in milliseconds
-    const maxDelay = 1000;  // Maximum delay in milliseconds
-
     const placeRodWithVariableTiming = () => {
-      this.placeRod();
-      let progress = this.rods.length / targetRodCount;
+      const elapsedTime = (Date.now() - this.startTime) / 1000; // in seconds
+      const t = elapsedTime / 60; // Normalize time based on total duration
+      const frequency = this.calculateFrequency(t);
 
-      // Adjust progress to accelerate and then decelerate rod placement
-      if (progress > 1) progress = 1;  // Cap progress at 1 to avoid negative delays
-      // Use a parabolic function to model acceleration and deceleration
-      const delay = maxDelay - ((maxDelay - minDelay) * 4 * progress * (1 - progress));
+      // Use an exponential function to decrease the delay more significantly at higher frequencies
+      const delayFactor = Math.pow(1 - frequency, 30); // The exponent can be adjusted to control the "dramatic" effect
+      const delay = this.maxInterval - (this.maxInterval - this.minInterval) * (1 - delayFactor);
+
+      this.placeRod();
 
       setTimeout(placeRodWithVariableTiming, delay);
     };
@@ -91,18 +128,13 @@ class SphereWithRods {
   animate = (): void => {
     requestAnimationFrame(this.animate);
 
-    // Parameters for the camera's orbit
-    const radius = 5;  // Distance from the center of the scene
-    const orbitSpeed = 0.0005;  // Speed of the orbit
+    const orbitSpeed = 0.0005;
     const time = Date.now() * orbitSpeed;
 
-    // Calculate the new camera position
-    this.camera.position.x = radius * Math.sin(time);
-    this.camera.position.y = 0;  // Keep the camera at the same level as the sphere
-    this.camera.position.z = radius * Math.cos(time);
-
-    // Always look at the center of the scene
-    this.camera.lookAt(new THREE.Vector3(0, 0, 0));  // Adjust as necessary if your sphere's center is not at the origin
+    this.camera.position.x = 5 * Math.sin(time);
+    this.camera.position.y = 0;
+    this.camera.position.z = 5 * Math.cos(time);
+    this.camera.lookAt(new THREE.Vector3(0, 0, 0));
 
     this.renderer.render(this.scene, this.camera);
   }
