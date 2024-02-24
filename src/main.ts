@@ -1,100 +1,94 @@
 import * as THREE from 'three';
 
-interface RodParameters {
-  rodRadius: number;
-  rodLength: number;
-  rodSegments: number;
-}
-
-class ThreeJSSetup {
+class SphereWithRods {
   scene: THREE.Scene;
   camera: THREE.PerspectiveCamera;
   renderer: THREE.WebGLRenderer;
-  rodGeometry: THREE.CylinderGeometry;
-  cameraRadius: number; // Distance of the camera from the center of the scene
-  cameraTheta: number; // Horizontal angle for camera rotation
+  rods: THREE.Mesh[] = [];
+  rodMaterial: THREE.MeshBasicMaterial;
 
-  constructor(rodParams: RodParameters) {
+  constructor() {
     this.scene = new THREE.Scene();
+
+    // Set the background color to a darker shade
+    this.scene.background = new THREE.Color(0x0a0a0a); // Dark grey
+
     this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    this.renderer = new THREE.WebGLRenderer();
+    this.renderer = new THREE.WebGLRenderer({ alpha: true });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(this.renderer.domElement);
+    this.camera.position.set(5, 5, 5);
+    this.camera.lookAt(this.scene.position);
 
-    // Set the initial position and orientation of the camera
-    this.cameraRadius = 5; // Adjust as needed
-    this.cameraTheta = 0; // Starting angle
+    // Rod material with semi-transparency
+    this.rodMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5 });
 
-    this.updateCameraPosition();
+    // Setup lighting
+    const ambientLight = new THREE.AmbientLight(0x404040);
+    this.scene.add(ambientLight);
 
-    this.rodGeometry = new THREE.CylinderGeometry(rodParams.rodRadius, rodParams.rodRadius, rodParams.rodLength, rodParams.rodSegments);
+    // Start the rod placement and camera animation
+    this.startPlacingRods();
+    this.animate();
   }
 
-  addRodToSphere(): void {
-    const sphereRadius = 2; // Adjust as needed
-    const phi = Math.random() * Math.PI; // Random angle for spherical coordinates
-    const theta = Math.random() * 2 * Math.PI;
+  placeRod(): void {
+    // Define the base and maximum length of the rods
+    const baseLength = 1;  // Assuming R = 1 for simplicity
+    const maxLength = 4;  // 4R
 
-    // Convert spherical coordinates to Cartesian for the rod's position
-    const x = sphereRadius * Math.sin(phi) * Math.cos(theta);
-    const y = sphereRadius * Math.sin(phi) * Math.sin(theta);
-    const z = sphereRadius * Math.cos(phi);
+    // Generate a random length with 2R being the most likely
+    const randomFactor = Math.pow(Math.random(), 2);  // Squaring the random number to skew towards lower values
+    const lengthVariance = (maxLength - baseLength) * randomFactor;
+    const rodLength = baseLength + lengthVariance;
 
-    // Number of segments per rod to simulate the bell curve opacity
-    const segments = 10; // More segments for a smoother gradient
-    const segmentLength = this.rodGeometry.parameters.height / segments;
+    const rodGeometry = new THREE.CylinderGeometry(0.01, 0.01, rodLength, 32);
+    const rod = new THREE.Mesh(rodGeometry, this.rodMaterial);
 
-    for (let i = 0; i < segments; i++) {
-      // Calculate opacity using a simple bell curve formula, adjusted for the number of segments
-      const opacity = Math.exp(-Math.pow(i - segments / 2, 2) / (2 * Math.pow(segments / 4, 2)));
+    // Random spherical coordinates
+    const phi = Math.random() * 2 * Math.PI; // Azimuthal angle
+    const theta = Math.random() * Math.PI; // Polar angle
+    const jitter = 0.9 + Math.random() * 0.2; // Jitter for radius (0.9 to 1.1)
 
-      // Create a material for each segment with the calculated opacity
-      const material = new THREE.MeshBasicMaterial({
-        color: 0xffffff,
-        transparent: true,
-        opacity: opacity
-      });
+    // Convert spherical to Cartesian coordinates
+    const x = jitter * Math.sin(theta) * Math.cos(phi);
+    const y = jitter * Math.sin(theta) * Math.sin(phi);
+    const z = jitter * Math.cos(theta);
 
-      // Create a segment and position it accordingly
-      const segmentGeometry = new THREE.CylinderGeometry(this.rodGeometry.parameters.radiusTop, this.rodGeometry.parameters.radiusBottom, segmentLength, this.rodGeometry.parameters.radialSegments);
-      const segment = new THREE.Mesh(segmentGeometry, material);
+    rod.position.set(x, y, z);
 
-      // Calculate the segment's position along the rod
-      const segmentPosition = (i - segments / 2 + 0.5) * segmentLength;
-      segment.position.set(x, y + segmentPosition, z);
+    // Orient rod tangent to sphere
+    rod.lookAt(this.scene.position);
 
-      // Orient the segment towards the center of the sphere
-      segment.lookAt(this.scene.position);
-
-      this.scene.add(segment);
-    }
+    this.scene.add(rod);
+    this.rods.push(rod);
   }
 
-
-  updateCameraPosition(): void {
-    // Update the camera's position using spherical coordinates
-    this.camera.position.x = this.cameraRadius * Math.sin(this.cameraTheta);
-    this.camera.position.z = this.cameraRadius * Math.cos(this.cameraTheta);
-    this.camera.lookAt(this.scene.position); // Ensure the camera always looks at the center of the scene
+  startPlacingRods(): void {
+    setInterval(() => {
+      this.placeRod();
+    }, 100);
   }
 
   animate = (): void => {
     requestAnimationFrame(this.animate);
 
-    // Update the camera's position for each frame to rotate it around the sphere
-    this.cameraTheta += 0.01; // Adjust the speed of rotation as needed
-    this.updateCameraPosition();
+    // Parameters for the camera's orbit
+    const radius = 5;  // Distance from the center of the scene
+    const orbitSpeed = 0.0005;  // Speed of the orbit
+    const time = Date.now() * orbitSpeed;
+
+    // Calculate the new camera position
+    this.camera.position.x = radius * Math.sin(time);
+    this.camera.position.y = 0;  // Keep the camera at the same level as the sphere
+    this.camera.position.z = radius * Math.cos(time);
+
+    // Always look at the center of the scene
+    this.camera.lookAt(new THREE.Vector3(0, 0, 0));  // Adjust as necessary if your sphere's center is not at the origin
 
     this.renderer.render(this.scene, this.camera);
   }
+
 }
 
-const rodParams: RodParameters = { rodRadius: 0.05, rodLength: 5, rodSegments: 32 };
-const threeJSSetup = new ThreeJSSetup(rodParams);
-
-threeJSSetup.animate();
-
-// Set an interval to add a rod every 100ms
-setInterval(() => {
-  threeJSSetup.addRodToSphere();
-}, 100);
+new SphereWithRods();
