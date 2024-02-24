@@ -14,6 +14,18 @@ class SphereWithRods {
   constructor() {
     this.constructSphere();
     this.constructSparkline();
+    this.addEventListeners();
+  }
+
+  addEventListeners(): void {
+    window.addEventListener('resize', this.onWindowResize.bind(this), false);
+  }
+
+  onWindowResize(): void {
+    // Update camera aspect ratio and renderer size
+    this.camera.aspect = window.innerWidth / window.innerHeight;
+    this.camera.updateProjectionMatrix();
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
   }
 
   constructSphere(): void {
