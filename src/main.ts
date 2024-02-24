@@ -69,10 +69,14 @@ class SphereWithRods {
   }
 
   calculateFrequency(t: number): number {
-    const wrappedT = t % 1; // Wrap t to the range [0, 1]
+    // Sine function adjusted for [0, 1] range, peaking in the middle
+    const sineWave = Math.sin(Math.PI * t);
 
-    // Parabolic curve equation: -4t^2 + 4t
-    return -4 * wrappedT * wrappedT + 4 * wrappedT;
+    // Raise the sine wave to a power to make the curve more dramatic
+    const power = 20; // Adjust this power to make the curve more or less dramatic
+    const dramaticSineWave = Math.pow(sineWave, power);
+
+    return dramaticSineWave;
   }
 
   placeRod(): void {
