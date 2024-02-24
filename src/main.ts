@@ -63,7 +63,7 @@ class SphereWithRods {
     this.sparklineContext.beginPath();
 
     // placing this slightly inside the canvas, to ensure that the line is not cut off
-    for (let x = 10; x <= this.sparklineCanvas.width - 20; x++) {
+    for (let x = 10; x <= this.sparklineCanvas.width - 10; x++) {
       const t = x / this.sparklineCanvas.width;
       const y = this.calculateFrequency(t) * (this.sparklineCanvas.height - 20) + 10;
       this.sparklineContext.lineTo(x, this.sparklineCanvas.height - y);
