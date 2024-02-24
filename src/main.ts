@@ -20,7 +20,7 @@ class SphereWithRods {
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x0a0a0a); // Dark grey
 
-    this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
+    this.camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 100);
     this.renderer = new THREE.WebGLRenderer({ alpha: true });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(this.renderer.domElement);
@@ -81,26 +81,52 @@ class SphereWithRods {
   }
 
   placeRod(): void {
-    const baseLength = 1;  // Assuming R = 1
+    // Base length and maximum length of the rods
+    const baseLength = 1;  // Assuming R = 1 for simplicity
     const maxLength = 4;  // 4R
 
-    const randomFactor = Math.random();  // Direct random factor for simplicity
-    const rodLength = baseLength + (maxLength - baseLength) * randomFactor;
+    // Random length for the rod between baseLength and maxLength
+    const rodLength = baseLength + Math.random() * (maxLength - baseLength);
 
+    // Rod geometry
     const rodGeometry = new THREE.CylinderGeometry(0.01, 0.01, rodLength, 32);
     const rod = new THREE.Mesh(rodGeometry, this.rodMaterial);
 
-    const phi = Math.random() * 2 * Math.PI; // Azimuthal angle
-    const theta = Math.random() * Math.PI; // Polar angle
-    const jitter = 0.9 + Math.random() * 0.2; // Jitter for radius
+    // Random spherical coordinates
+    const phi = Math.random() * 2 * Math.PI;  // Azimuthal angle
+    const theta = Math.acos(2 * Math.random() - 1);  // Polar angle, adjusted for uniform distribution
+    const jitter = 0.9 + Math.random() * 0.2;  // Jitter for radius (0.9 to 1.1)
 
+    // Convert spherical to Cartesian coordinates for position
     const x = jitter * Math.sin(theta) * Math.cos(phi);
     const y = jitter * Math.sin(theta) * Math.sin(phi);
     const z = jitter * Math.cos(theta);
 
+    // Set rod position
     rod.position.set(x, y, z);
-    rod.lookAt(this.scene.position);
 
+    // Create a vector representing the rod's position
+    const rodPosition = new THREE.Vector3(x, y, z);
+
+    // Calculate the radial direction from the sphere's center to the rod's position
+    const radialDirection = rodPosition.clone().normalize();
+
+    // Calculate the up direction for the rod (tangent to the sphere at the rod's position)
+    // This can be any vector that is not parallel to the radial direction
+    // Here, we use a simple trick: if the radial direction is not vertical, use the world up direction; otherwise, use the world forward direction
+    const upDirection = Math.abs(radialDirection.y) < 0.99 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(0, 0, 1);
+
+    // Calculate the tangent direction at the rod's position by taking the cross product of the radial and up directions
+    const tangentDirection = new THREE.Vector3().crossVectors(radialDirection, upDirection).normalize();
+
+    // Rotate the rod to align with the tangent direction
+    rod.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), tangentDirection);
+
+    // Apply an additional random rotation around the radial direction to vary the orientation of the rods
+    const randomAngle = Math.random() * 2 * Math.PI;  // Random angle for rotation
+    rod.rotateOnWorldAxis(radialDirection, randomAngle);  // Rotate the rod around the radial direction by the random angle
+
+    // Add the rod to the scene and the rods array
     this.scene.add(rod);
     this.rods.push(rod);
   }
