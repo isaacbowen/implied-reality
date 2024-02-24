@@ -97,9 +97,14 @@ class SphereWithRods {
     // Base length and maximum length of the rods
     const baseLength = 1;  // Assuming R = 1 for simplicity
     const maxLength = 4;  // 4R
+    const biasFactor = 3;  // Adjust this value to control the bias; higher values favor shorter rods more
 
-    // Random length for the rod between baseLength and maxLength
-    const rodLength = baseLength + Math.random() * (maxLength - baseLength);
+    // Generate a biased random length
+    // Math.pow(Math.random(), biasFactor) generates a number between 0 and 1, skewed towards 0
+    // Multiplying by (maxLength - baseLength) scales it to the desired range
+    // Adding baseLength offsets it so the minimum is baseLength, not 0
+    const rodLength = baseLength + Math.pow(Math.random(), biasFactor) * (maxLength - baseLength);
+
 
     // Rod geometry
     const rodGeometry = new THREE.CylinderGeometry(0.01, 0.01, rodLength, 32);
