@@ -9,7 +9,7 @@ class SphereWithRods {
   sparklineCanvas: HTMLCanvasElement;
   sparklineContext: CanvasRenderingContext2D;
   startTime: number;
-  totalDuration: number = 10; // seconds
+  totalDuration: number = 60; // seconds
 
   constructor() {
     this.constructSphere();
@@ -46,7 +46,8 @@ class SphereWithRods {
   drawSparkline(): void {
     const currentTime = Date.now();
     const elapsedTime = (currentTime - this.startTime) / 1000; // in seconds
-    const progress = elapsedTime / this.totalDuration;
+    const cycle = elapsedTime % (2 * this.totalDuration); // Complete cycle for back and forth
+    const progress = (cycle > this.totalDuration) ? 2 - cycle / this.totalDuration : cycle / this.totalDuration;
 
     this.sparklineContext.clearRect(0, 0, this.sparklineCanvas.width, this.sparklineCanvas.height);
 
@@ -58,7 +59,7 @@ class SphereWithRods {
     }
     this.sparklineContext.stroke();
 
-    const lineX = (progress % 1) * this.sparklineCanvas.width;
+    const lineX = progress * this.sparklineCanvas.width;
     this.sparklineContext.beginPath();
     this.sparklineContext.moveTo(lineX, 0);
     this.sparklineContext.lineTo(lineX, this.sparklineCanvas.height);
@@ -105,24 +106,27 @@ class SphereWithRods {
   }
 
   startPlacingRods(): void {
-    const minInterval = 25; // Minimum interval time in ms
-    const maxInterval = 1000; // Maximum interval time in ms
-
-    const placeRodWithVariableTiming = () => {
+    const placeOrRemoveRod = () => {
       const elapsedTime = (Date.now() - this.startTime) / 1000; // in seconds
-      const t = elapsedTime / this.totalDuration; // Normalize time based on total duration
+      const cycle = Math.floor(elapsedTime / this.totalDuration);
+      const t = (elapsedTime % this.totalDuration) / this.totalDuration; // Normalized time for current half-cycle
       const frequency = this.calculateFrequency(t);
 
-      // Use an exponential function to decrease the delay more significantly at higher frequencies
-      const delayFactor = Math.pow(1 - frequency, 100); // The exponent can be adjusted to control the "dramatic" effect
-      const delay = maxInterval - (maxInterval - minInterval) * (1 - delayFactor);
+      const delayFactor = Math.pow(1 - frequency, 4); // Adjust the exponent as needed
+      const delay = 1000 - (1000 - 25) * (1 - delayFactor);
 
-      this.placeRod();
+      if (cycle % 2 === 0) {
+        this.placeRod(); // Add rod during even cycles
+      } else if (this.rods.length > 0) {
+        const removeIndex = Math.floor(Math.random() * this.rods.length);
+        const [removedRod] = this.rods.splice(removeIndex, 1); // Remove random rod during odd cycles
+        this.scene.remove(removedRod);
+      }
 
-      setTimeout(placeRodWithVariableTiming, delay);
+      setTimeout(placeOrRemoveRod, delay);
     };
 
-    placeRodWithVariableTiming();
+    placeOrRemoveRod();
   }
 
   animate = (): void => {
