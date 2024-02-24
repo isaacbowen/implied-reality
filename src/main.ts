@@ -6,6 +6,10 @@ class SphereWithRods {
   renderer: THREE.WebGLRenderer;
   rods: THREE.Mesh[] = [];
   rodMaterial: THREE.MeshBasicMaterial;
+  rodCount: number = 0;
+  targetRodCount: number = 100; // Example target count, adjust as needed
+  minInterval: number = 100; // Minimum interval time in ms
+  maxInterval: number = 1000; // Maximum interval time in ms
 
   constructor() {
     this.scene = new THREE.Scene();
@@ -65,9 +69,23 @@ class SphereWithRods {
   }
 
   startPlacingRods(): void {
-    setInterval(() => {
+    const targetRodCount = 1000;  // Example target rod count
+    const minDelay = 10;  // Minimum delay in milliseconds
+    const maxDelay = 1000;  // Maximum delay in milliseconds
+
+    const placeRodWithVariableTiming = () => {
       this.placeRod();
-    }, 100);
+      let progress = this.rods.length / targetRodCount;
+
+      // Adjust progress to accelerate and then decelerate rod placement
+      if (progress > 1) progress = 1;  // Cap progress at 1 to avoid negative delays
+      // Use a parabolic function to model acceleration and deceleration
+      const delay = maxDelay - ((maxDelay - minDelay) * 4 * progress * (1 - progress));
+
+      setTimeout(placeRodWithVariableTiming, delay);
+    };
+
+    placeRodWithVariableTiming();
   }
 
   animate = (): void => {
