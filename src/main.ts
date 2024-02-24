@@ -9,9 +9,7 @@ class SphereWithRods {
   sparklineCanvas: HTMLCanvasElement;
   sparklineContext: CanvasRenderingContext2D;
   startTime: number;
-
-  minInterval: number = 100; // Minimum interval time in ms
-  maxInterval: number = 1000; // Maximum interval time in ms
+  totalDuration: number = 10; // seconds
 
   constructor() {
     this.constructSphere();
@@ -22,7 +20,7 @@ class SphereWithRods {
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x0a0a0a); // Dark grey
 
-    this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
     this.renderer = new THREE.WebGLRenderer({ alpha: true });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(this.renderer.domElement);
@@ -48,8 +46,7 @@ class SphereWithRods {
   drawSparkline(): void {
     const currentTime = Date.now();
     const elapsedTime = (currentTime - this.startTime) / 1000; // in seconds
-    const totalDuration = 60; // simulation duration in seconds
-    const progress = elapsedTime / totalDuration;
+    const progress = elapsedTime / this.totalDuration;
 
     this.sparklineContext.clearRect(0, 0, this.sparklineCanvas.width, this.sparklineCanvas.height);
 
@@ -61,7 +58,7 @@ class SphereWithRods {
     }
     this.sparklineContext.stroke();
 
-    const lineX = progress * this.sparklineCanvas.width;
+    const lineX = (progress % 1) * this.sparklineCanvas.width;
     this.sparklineContext.beginPath();
     this.sparklineContext.moveTo(lineX, 0);
     this.sparklineContext.lineTo(lineX, this.sparklineCanvas.height);
@@ -72,14 +69,10 @@ class SphereWithRods {
   }
 
   calculateFrequency(t: number): number {
-    // Sine function adjusted for [0, 1] range, peaking in the middle
-    const sineWave = Math.sin(Math.PI * t);
+    const wrappedT = t % 1; // Wrap t to the range [0, 1]
 
-    // Raise the sine wave to a power to make the curve more dramatic
-    const power = 20; // Adjust this power to make the curve more or less dramatic
-    const dramaticSineWave = Math.pow(sineWave, power);
-
-    return dramaticSineWave;
+    // Parabolic curve equation: -4t^2 + 4t
+    return -4 * wrappedT * wrappedT + 4 * wrappedT;
   }
 
   placeRod(): void {
@@ -108,14 +101,17 @@ class SphereWithRods {
   }
 
   startPlacingRods(): void {
+    const minInterval = 25; // Minimum interval time in ms
+    const maxInterval = 1000; // Maximum interval time in ms
+
     const placeRodWithVariableTiming = () => {
       const elapsedTime = (Date.now() - this.startTime) / 1000; // in seconds
-      const t = elapsedTime / 60; // Normalize time based on total duration
+      const t = elapsedTime / this.totalDuration; // Normalize time based on total duration
       const frequency = this.calculateFrequency(t);
 
       // Use an exponential function to decrease the delay more significantly at higher frequencies
-      const delayFactor = Math.pow(1 - frequency, 30); // The exponent can be adjusted to control the "dramatic" effect
-      const delay = this.maxInterval - (this.maxInterval - this.minInterval) * (1 - delayFactor);
+      const delayFactor = Math.pow(1 - frequency, 100); // The exponent can be adjusted to control the "dramatic" effect
+      const delay = maxInterval - (maxInterval - minInterval) * (1 - delayFactor);
 
       this.placeRod();
 
