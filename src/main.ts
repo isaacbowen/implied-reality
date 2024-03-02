@@ -29,6 +29,20 @@ class SphereWithRods {
 
   addEventListeners(): void {
     window.addEventListener('resize', this.onWindowResize.bind(this), false);
+    // Add click event listener for toggling fullscreen
+    window.addEventListener('click', this.toggleFullScreen.bind(this), false);
+  }
+
+  toggleFullScreen(): void {
+    if (!document.fullscreenElement) {
+      if (document.body.requestFullscreen) {
+        document.body.requestFullscreen();
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
   }
 
   onWindowResize(): void {
