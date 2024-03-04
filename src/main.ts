@@ -89,6 +89,9 @@ class SphereWithRods {
 
   drawSparkline(): void {
     this.sparklineContext.clearRect(0, 0, this.sparklineCanvas.width, this.sparklineCanvas.height);
+    this.sparklineContext.strokeStyle = 'white';
+    this.sparklineContext.lineWidth = Math.ceil(Math.min(window.innerWidth, window.innerHeight) / 1000) * 2;
+
     this.sparklineContext.beginPath();
     for (let x = 10; x <= this.sparklineCanvas.width - 10; x++) {
       const t = (x - 10) / (this.sparklineCanvas.width - 20); // Adjust to ensure t starts from 0
@@ -104,8 +107,6 @@ class SphereWithRods {
     this.sparklineContext.beginPath();
     this.sparklineContext.moveTo(lineX, 0);
     this.sparklineContext.lineTo(lineX, this.sparklineCanvas.height);
-    this.sparklineContext.strokeStyle = 'white';
-    this.sparklineContext.lineWidth = 2;
     this.sparklineContext.stroke();
 
     requestAnimationFrame(this.drawSparkline.bind(this));
