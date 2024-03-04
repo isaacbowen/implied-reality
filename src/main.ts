@@ -90,7 +90,7 @@ class SphereWithRods {
   drawSparkline(): void {
     this.sparklineContext.clearRect(0, 0, this.sparklineCanvas.width, this.sparklineCanvas.height);
     this.sparklineContext.strokeStyle = 'white';
-    this.sparklineContext.lineWidth = Math.ceil(Math.min(window.innerWidth, window.innerHeight) / 1000) * 2;
+    this.sparklineContext.lineWidth = Math.ceil(Math.sqrt(Math.min(window.innerWidth, window.innerHeight)) / 1000) * 3;
 
     this.sparklineContext.beginPath();
     for (let x = 10; x <= this.sparklineCanvas.width - 10; x++) {
