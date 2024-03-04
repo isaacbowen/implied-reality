@@ -49,6 +49,8 @@ class SphereWithRods {
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.sparklineCanvas.width = Math.min(window.innerWidth, window.innerHeight) * 0.5;
+    this.sparklineCanvas.height = this.sparklineCanvas.width * 0.3;
   }
 
   constructSphere(): void {
@@ -68,6 +70,8 @@ class SphereWithRods {
   constructSparkline(): void {
     this.sparklineCanvas = document.getElementById('sparkline-canvas') as HTMLCanvasElement;
     this.sparklineContext = this.sparklineCanvas.getContext('2d')!;
+    this.sparklineCanvas.width = Math.min(window.innerWidth, window.innerHeight) * 0.5;
+    this.sparklineCanvas.height = this.sparklineCanvas.width * 0.3;
     this.startTime = Date.now();
     this.drawSparkline();
   }
