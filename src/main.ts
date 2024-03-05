@@ -32,15 +32,16 @@ class SphereWithRods {
     window.addEventListener('click', this.toggleFullScreen.bind(this), false);
   }
 
-  toggleFullScreen(): void {
+  toggleFullScreen(event: MouseEvent): void {
+    // ignore clicks on links
+    if ((event.target as HTMLElement).tagName === 'A') {
+      return;
+    }
+
     if (!document.fullscreenElement) {
-      if (document.body.requestFullscreen) {
-        document.body.requestFullscreen();
-      }
+      document.body.requestFullscreen?.();
     } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      }
+      document.exitFullscreen?.();
     }
   }
 
