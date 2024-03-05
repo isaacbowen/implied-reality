@@ -3,48 +3,95 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
     <link rel="icon" type="image/png" href="/favicon.png" />
-
     <meta property="og:image" content="/og.png" />
     <meta property="og:title" content="implied reality" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://impliedreality.com/" />
-
     <title>implied reality - impliedreality.com</title>
-    <!-- https://github.com/isaacbowen/implied-reality -->
-
     <script
       src="https://cdn.usefathom.com/script.js"
       data-site="LADIVBCH"
       defer
     ></script>
-
     <style>
       body {
         margin: 0;
         padding: 0;
-        overflow: hidden;
         background-color: #0a0a0a;
+        font-family: Arial, sans-serif;
       }
 
-      #threejs-canvas {
-        position: absolute;
+      #sphere-canvas,
+      #sparkline-canvas {
+        position: fixed;
+      }
+
+      #sphere-canvas {
         top: 0;
         left: 0;
+        z-index: 1;
       }
 
       #sparkline-canvas {
-        position: absolute;
         right: 1vw;
         bottom: 1vw;
         opacity: 0.5;
+        z-index: 2;
+      }
+
+      #text-overlay {
+        font-size: 2em;
+        line-height: 1.5;
+
+        position: relative;
+        z-index: 3;
+
+        /* start almost entirely below the fold */
+        margin-top: calc(100vh - 0.7em);
+        padding: 0 20vw 20vh;
+
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      article {
+        margin-bottom: 2em;
+      }
+
+      aside {
+        font-size: 0.61em;
+        margin-right: -10vw;
+      }
+
+      a {
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      a:hover {
+        color: rgba(255, 255, 255, 0.8);
       }
     </style>
   </head>
   <body>
-    <canvas id="threejs-canvas"></canvas>
+    <canvas id="sphere-canvas"></canvas>
     <canvas id="sparkline-canvas"></canvas>
+    <section id="text-overlay">
+      <article>
+        <p>
+          This is how I visualize the nebulous, constantly shifting mirage of
+          "reality" -- as the persistent (if not fully stable) shape implied by
+          the intersection of all our perspectives, all our beliefs. What I see
+          and know and believe may not ever intersect directly with what you see
+          and know and believe, but lay all those lines down on a
+          multi-dimensional canvas and a shape begins to emerge. Can I reach
+          you? Can you reach me?
+        </p>
+      </article>
+
+      <aside>
+        <p><a href="https://isaacbowen.com/" target="_blank">Isaac Bowen</a></p>
+      </aside>
+    </section>
     <script src="bundle.js"></script>
   </body>
 </html>

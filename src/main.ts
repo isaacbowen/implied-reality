@@ -10,7 +10,7 @@ class SphereWithRods {
   sparklineContext: CanvasRenderingContext2D;
   startTime: number;
   lastTime: number = 0; // To track the last animation frame time
-  totalDuration: number = 60; // seconds
+  totalDuration: number = 45; // seconds
   baselineOrbitSpeed: number = 0.25; // Original baseline speed
   currentOrbitSpeed: number = this.baselineOrbitSpeed; // Starts at the baseline speed
   accumulatedAngle: number = 0; // To accumulate the orbit angle
@@ -29,7 +29,6 @@ class SphereWithRods {
 
   addEventListeners(): void {
     window.addEventListener('resize', this.onWindowResize.bind(this), false);
-    // Add click event listener for toggling fullscreen
     window.addEventListener('click', this.toggleFullScreen.bind(this), false);
   }
 
@@ -55,7 +54,11 @@ class SphereWithRods {
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x0a0a0a);
     this.camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 100);
-    this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    this.renderer = new THREE.WebGLRenderer({
+      alpha: true,
+      antialias: true,
+      canvas: document.getElementById('sphere-canvas'),
+    });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(this.renderer.domElement);
     this.camera.position.set(5, 5, 5);
