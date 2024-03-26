@@ -1,3 +1,3 @@
 # implied reality
 
-https://isaacbowen.github.io/implied-reality
+https://impliedreality.com
